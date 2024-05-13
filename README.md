@@ -2,6 +2,7 @@
 
 ## Overview
 AVOwithMie - Client is a web platform designed for users to listen to podcasts and read books. This project focuses on providing a seamless and engaging user experience for media consumption.
+- **AVOwithMie Website:** [https://avowithmie.netlify.app/](https://avowithmie.netlify.app/)
 
 ## UI Documentation
 This project uses Tailwind CSS for styling and DaisyUI for UI components, ensuring a responsive and modern design.
