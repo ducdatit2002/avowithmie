@@ -1,4 +1,3 @@
-//import { useSelector } from 'react-redux'
 import { useLocation, Route, Routes } from 'react-router-dom'
 
 import Sidebar from './components/Sidebar'
@@ -16,17 +15,22 @@ import RegisterPage from './routes/LoginSign/Register'
 const App = () => {
   const location = useLocation()
   const isHomePage = location.pathname === '/'
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register'
 
   return (
     <div className='relative flex'>
-      {!isHomePage && <Sidebar />}
-      <div className={`flex-1 flex flex-col ${isHomePage ? '' : 'ml-[var(--sidebar-width)]'}`}>
-        <div className='flex justify-between items-center p-4 shadow-md'>
-          {!isHomePage && <Searchbar />}
-          {!isHomePage && <Header />}
-        </div>
-        <div className='px-6 h-[calc(100vh-72px)] overflow-y-scroll hide-scrollbar flex xl:flex-row flex-col-reverse'>
-          <div className='flex-1 h-fit pb-40'>
+      {!isHomePage && !isAuthPage && <Sidebar />}
+      <div className={`flex-1 flex flex-col ${isHomePage || isAuthPage ? '' : 'ml-[var(--sidebar-width)]'}`}>
+        {!isAuthPage && (
+          <div className='flex justify-between items-center p-4 shadow-md'>
+            {!isHomePage && <Searchbar />}
+            {!isHomePage && <Header />}
+          </div>
+        )}
+        <div
+          className={`${isAuthPage ? '' : 'px-6'} h-[calc(100vh-72px)] overflow-y-scroll hide-scrollbar flex xl:flex-row flex-col-reverse`}
+        >
+          <div className={`flex-1 h-fit ${isAuthPage ? '' : 'pb-40'}`}>
             <Routes>
               <Route path='/' element={<Home />} />
               <Route path='/podcast' element={<Podcast />} />
@@ -40,8 +44,8 @@ const App = () => {
         </div>
       </div>
 
-      {!isHomePage && (
-        <div className='absolute h-28 bottom-0 left-0 right-0 flex animate-slideup bg-background  z-10'>
+      {!isHomePage && !isAuthPage && (
+        <div className='absolute h-28 bottom-0 left-0 right-0 flex animate-slideup bg-background z-10'>
           <MusicPlayer />
         </div>
       )}
