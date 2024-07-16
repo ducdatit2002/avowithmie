@@ -1,0 +1,1386 @@
+openapi: 3.0.3
+info:
+  title: AVO with Mie - Swagger Page
+  description: |-
+    This is a server for AVO with Mie website - Website for listening podcast and reading book. 
+    
+    Some useful links:
+    - [The Pet Store repository](https://github.com/ducdatit2002/avowithmie-server)
+    - [The source API definition](https://avowithmie-server.onrender.com/api-docs)
+
+  contact:
+    email: ducdatit2002@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+
+servers:
+  - url: https://avowithmie-server.onrender.com/api/
+  - url: http://localhost:4000/api/
+tags:
+  - name: Auth
+    description: Operations about authentication
+  - name: Users
+    description: Operations about users
+  - name: Podcasts
+    description: Operations about podcasts
+  - name: Playlist
+    description: Operations about playlist
+  - name: Books
+    description: Operations about books
+  - name: Booklist
+    description: Operations about booklists
+  - name: Search
+    description: Operations about search
+paths:
+
+  /login:
+    post:
+      tags:
+        - Auth
+      summary: Sign in an existing user
+      description: Log in with an existing user account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "johndoe@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "SecurePassword123!"
+      responses:
+        '200':
+          description: User signed in successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                  message:
+                    type: string
+                    example: "Signing in please wait"
+        '400':
+          description: Invalid email or password
+        '500':
+          description: Server error
+
+  /users:
+    post:
+      tags:
+        - Auth
+      summary: Sign up a new user
+      description: Create a new user account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+                - gender
+                - month
+                - date
+                - year
+              properties:
+                name:
+                  type: string
+                  example: "JohnDoe"
+                email:
+                  type: string
+                  format: email
+                  example: "johndoe@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "SecurePassword123!"
+                gender:
+                  type: string
+                  enum:
+                    - male
+                    - female
+                    - non-binary
+                month:
+                  type: string
+                  example: "January"
+                date:
+                  type: string
+                  example: "01"
+                year:
+                  type: string
+                  example: "1990"
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User registered successfully"
+                  userId:
+                    type: string
+                    example: "5f8d04034b5dc10d3684878f"
+        '400':
+          description: Invalid input, object invalid
+        '500':
+          description: Server error
+    get:
+      tags:
+        - Users
+      summary: Get all users
+      description: Retrieve a list of all users, excluding their passwords and version key.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: Token for authentication
+      responses:
+        '200':
+          description: List of users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+      security:
+        - adminAuth: []
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get a user by ID
+      description: Retrieve a specific user by ID, excluding their password and version key.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            description: User ID
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+            description: Token for authentication
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+      security:
+        - auth: []
+    put:
+      tags:
+        - Users
+      summary: Update a user by ID
+      description: Update the information of a specific user by ID.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            description: User ID
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+            description: Token for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+      security:
+        - auth: []
+    delete:
+      tags:
+        - Users
+      summary: Delete a user by ID
+      description: Delete a specific user by ID.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            description: User ID
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+            description: Token for administrative access
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User deleted successfully"
+      security:
+        - adminAuth: []
+
+  /podcasts:
+    post:
+      tags:
+        - Podcasts
+      summary: Create a new podcast
+      description: Admin can create a new podcast entry.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: Token required to authenticate the admin.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Podcast'
+      responses:
+        '200':
+          description: Podcast created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Podcast'
+                  message:
+                    type: string
+                    example: 'Podcast created successfully'
+      security:
+        - adminApiKey: []
+    get:
+      tags:
+        - Podcasts
+      summary: Get all podcasts
+      description: Retrieve all podcasts.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: Token required to access the list of podcasts.
+      responses:
+        '200':
+          description: List of podcasts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Podcast'
+      security:
+        - apiKeyAuth: []
+
+  /podcasts/{id}:
+    put:
+      tags:
+        - Podcasts
+      summary: Update a podcast
+      description: Admin can update an existing podcast entry.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            description: Podcast ID
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: Token required for authentication as an admin.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Podcast'
+      responses:
+        '200':
+          description: Podcast updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Podcast'
+                  message:
+                    type: string
+                    example: 'Update podcast successfully'
+      security:
+        - adminApiKey: []
+
+    delete:
+      tags:
+        - Podcasts
+      summary: Delete a podcast
+      description: Admin can delete a podcast entry.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            description: Podcast ID
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: Token required for administrative privileges.
+      responses:
+        '200':
+          description: Podcast deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Podcast deleted successfully'
+      security:
+        - adminApiKey: []
+
+  /podcasts/like/{id}:
+    put:
+      tags:
+        - Podcasts
+      summary: Like or unlike a podcast
+      description: User can like or unlike a podcast.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            description: Podcast ID
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: Token required for user authentication.
+      responses:
+        '200':
+          description: Like status updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Added to your liked podcasts'  # This message can change based on the operation performed
+      security:
+        - auth: []
+
+  /podcasts/like:
+    get:
+      tags:
+        - Podcasts
+      summary: Get all liked podcasts
+      description: Retrieve all podcasts liked by the user.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: Token required for user authentication.
+      responses:
+        '200':
+          description: List of liked podcasts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Podcast'
+      security:
+        - auth: []
+
+  /playlists:
+    post:
+      tags:
+        - Playlist
+      summary: Create playlist
+      description: Create a new playlist.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed to authenticate the request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Playlist'
+      responses:
+        '201':
+          description: Playlist created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Playlist'
+      security:
+        - apiKeyAuth: []
+
+    get:
+      tags:
+        - Playlist
+      summary: Get all playlists
+      description: Retrieve all playlists.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed to access the list of playlists.
+      responses:
+        '200':
+          description: Playlists retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Playlist'
+      security:
+        - apiKeyAuth: []
+
+  /playlists/{id}:
+    put:
+      tags:
+        - Playlist
+      summary: Edit playlist by id
+      description: Update playlist details.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key required to authenticate the request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                desc:
+                  type: string
+                img:
+                  type: string
+      responses:
+        '200':
+          description: Playlist updated successfully
+      security:
+        - apiKeyAuth: []
+
+    get:
+      tags:
+        - Playlist
+      summary: Get playlist by id
+      description: Retrieve a specific playlist by its ID.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed to authenticate the request.
+      responses:
+        '200':
+          description: Playlist retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Playlist'
+      security:
+        - apiKeyAuth: []
+
+    delete:
+      tags:
+        - Playlist
+      summary: Delete playlist by id
+      description: Remove a playlist.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed for authentication.
+      responses:
+        '200':
+          description: Playlist deleted successfully
+      security:
+        - apiKeyAuth: []
+
+  /playlists/add-podcast:
+    put:
+      tags:
+        - Playlist
+      summary: Add podcast to playlist
+      description: Add a podcast to an existing playlist.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key required to authenticate the request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                playlistId:
+                  type: string
+                podcastId:
+                  type: string
+      responses:
+        '200':
+          description: Podcast added to playlist successfully
+      security:
+        - apiKeyAuth: []
+
+  /playlists/remove-podcast:
+    put:
+      tags:
+        - Playlist
+      summary: Remove podcast from playlist
+      description: Remove a podcast from a playlist.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key required to authenticate the request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                playlistId:
+                  type: string
+                podcastId:
+                  type: string
+      responses:
+        '200':
+          description: Podcast removed from playlist successfully
+      security:
+        - apiKeyAuth: []
+
+  /playlists/favourite:
+    get:
+      tags:
+        - Playlist
+      summary: Get user's favourite playlists
+      description: Retrieve all playlists marked as favourite by the user.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed to authenticate the request.
+      responses:
+        '200':
+          description: Favourite playlists retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Playlist'
+      security:
+        - apiKeyAuth: []
+
+  /playlists/random:
+    get:
+      tags:
+        - Playlist
+      summary: Get random playlists
+      description: Retrieve a random set of playlists.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed to authenticate the request.
+      responses:
+        '200':
+          description: Random playlists retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Playlist'
+      security:
+        - apiKeyAuth: []
+
+  /books:
+    post:
+      tags:
+        - Books
+      summary: Create book
+      description: Create a new book entry. Admin only.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed to authenticate the admin.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+      responses:
+        '200':
+          description: Book created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Book'
+                  message:
+                    type: string
+                    example: 'Book created successfully'
+      security:
+        - apiKeyAuth: []
+
+    get:
+      tags:
+        - Books
+      summary: Get all books
+      description: Retrieve all books.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed to access the list of books.
+      responses:
+        '200':
+          description: Books retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+      security:
+        - apiKeyAuth: []
+
+  /books/{id}:
+    put:
+      tags:
+        - Books
+      summary: Update book by id
+      description: Update details of a specific book. Admin only.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed for admin authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+      responses:
+        '200':
+          description: Book updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Book'
+                  message:
+                    type: string
+                    example: 'Update book successfully'
+      security:
+        - apiKeyAuth: []
+
+    delete:
+      tags:
+        - Books
+      summary: Delete book by id
+      description: Remove a book from the database. Admin only.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed for admin authentication.
+      responses:
+        '200':
+          description: Book deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Book deleted successfully'
+      security:
+        - apiKeyAuth: []
+
+  /books/like/{id}:
+    put:
+      tags:
+        - Books
+      summary: Like or unlike a book
+      description: User can like or unlike a book.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key required for user authentication.
+      responses:
+        '200':
+          description: Book like status updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Added to your liked books'  # Message can vary based on operation
+      security:
+        - apiKeyAuth: []
+
+  /books/like:
+    get:
+      tags:
+        - Books
+      summary: Get all liked books
+      description: Retrieve all books liked by the user.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key required for user authentication.
+      responses:
+        '200':
+          description: Liked books retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+      security:
+        - apiKeyAuth: []
+
+  /booklists:
+    post:
+      tags:
+        - Booklist
+      summary: Create booklist
+      description: Create a new booklist. Requires user authentication.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed to authenticate the request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookList'
+      responses:
+        '201':
+          description: Booklist created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BookList'
+      security:
+        - apiKeyAuth: []
+
+    get:
+      tags:
+        - Booklist
+      summary: Get all booklists
+      description: Retrieve all booklists. Requires user authentication.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed to access the list of booklists.
+      responses:
+        '200':
+          description: Booklists retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookList'
+      security:
+        - apiKeyAuth: []
+
+  /booklists/{id}:
+    put:
+      tags:
+        - Booklist
+      summary: Edit booklist by id
+      description: Update details of a specific booklist. Requires user authentication.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed to authenticate the user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookList'
+      responses:
+        '200':
+          description: Booklist updated successfully
+      security:
+        - apiKeyAuth: []
+
+    get:
+      tags:
+        - Booklist
+      summary: Get booklist by id
+      description: Retrieve a specific booklist by its ID. Requires user authentication.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed to authenticate the user.
+      responses:
+        '200':
+          description: Booklist retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BookList'
+      security:
+        - apiKeyAuth: []
+
+    delete:
+      tags:
+        - Booklist
+      summary: Delete booklist by id
+      description: Remove a booklist from the database. Requires user authentication.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed for user authentication.
+      responses:
+        '200':
+          description: Booklist deleted successfully
+      security:
+        - apiKeyAuth: []
+
+  /booklists/add-book:
+    put:
+      tags:
+        - Booklist
+      summary: Add book to booklist
+      description: Add a book to an existing booklist. Requires user authentication.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key required to authenticate the request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                booklistId:
+                  type: string
+                bookId:
+                  type: string
+      responses:
+        '200':
+          description: Book added to booklist successfully
+      security:
+        - apiKeyAuth: []
+
+  /booklists/remove-book:
+    put:
+      tags:
+        - Booklist
+      summary: Remove book from booklist
+      description: Remove a book from a booklist. Requires user authentication.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key required to authenticate the request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                booklistId:
+                  type: string
+                bookId:
+                  type: string
+      responses:
+        '200':
+          description: Book removed from booklist successfully
+      security:
+        - apiKeyAuth: []
+
+  /booklists/favourite:
+    get:
+      tags:
+        - Booklist
+      summary: Get user's favourite booklists
+      description: Retrieve all booklists marked as favourite by the user. Requires user authentication.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed to authenticate the request.
+      responses:
+        '200':
+          description: Favourite booklists retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookList'
+      security:
+        - apiKeyAuth: []
+
+  /booklists/random:
+    get:
+      tags:
+        - Booklist
+      summary: Get random booklists
+      description: Retrieve a random set of booklists. Requires user authentication.
+      parameters:
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed to authenticate the request.
+      responses:
+        '200':
+          description: Random booklists retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookList'
+      security:
+        - apiKeyAuth: []
+
+  /:
+    get:
+      tags:
+        - Search
+      summary: Search for items
+      description: Perform a search across different categories like books, podcasts, etc.
+      parameters:
+        - in: query
+          name: search
+          required: true
+          schema:
+            type: string
+          description: The search query string.
+        - in: query
+          name: category
+          schema:
+            type: string
+            enum: [books, podcasts, users]
+            default: all
+          description: Optional category to refine the search.
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Limit the number of results returned.
+        - in: header
+          name: x-auth-token
+          required: true
+          schema:
+            type: string
+          description: API key needed to authenticate the user and access the search functionality.
+      responses:
+        '200':
+          description: Search results returned successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: The ID of the item.
+                        title:
+                          type: string
+                          description: The title of the item.
+                        description:
+                          type: string
+                          description: A brief description of the item.
+                        type:
+                          type: string
+                          description: The type of the item (book, podcast, etc.).
+      security:
+        - apiKeyAuth: []
+
+
+components:
+  schemas:
+    Podcast:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Tiktok remix hehe"
+        artist:
+          type: string
+          example: "Duc Dat"
+        podcast:
+          type: string
+          description: "Link to the podcast file"
+          example: "podcast.mp3"
+        img:
+          type: string
+          description: "Link to the image file"
+          example: "song.jpg"
+        duration:
+          type: string
+          description: "Duration of the podcast in minutes"
+          example: "3"
+      required:
+        - name
+        - artist
+        - podcast
+        - img
+        - duration
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "Unique identifier for the User"
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          description: "Full name of the user"
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          description: "Email address of the user"
+          example: "johndoe@example.com"
+        password:
+          type: string
+          format: password
+          description: "Password for the user account (not shown in responses)"
+          example: "SecurePassword123!"
+        gender:
+          type: string
+          enum:
+            - male
+            - female
+            - non-binary
+          description: "Gender identity of the user"
+          example: "non-binary"
+        birthDate:
+          type: string
+          format: date
+          description: "Birth date of the user"
+          example: "1990-01-01"
+        likedPodcasts:
+          type: array
+          items:
+            type: string
+          description: "List of podcast IDs liked by the user"
+          example: ["podcastId1", "podcastId2"]
+        likedBooks:
+          type: array
+          items:
+            type: string
+          description: "List of book IDs liked by the user"
+          example: ["bookId1", "bookId2"]
+        isAdmin:
+          type: boolean
+          description: "Flag indicating if the user has administrative privileges"
+          example: false
+      required:
+        - id
+        - name
+        - email
+        - password
+        - gender
+        - birthDate
+    Playlist:
+      type: object
+      required:
+        - name
+        - user
+      properties:
+        name:
+          type: string
+          example: "Summer Hits"
+        user:
+          type: string
+          description: "User ID of the playlist owner"
+        desc:
+          type: string
+          example: "A playlist of summer hits"
+        podcasts:
+          type: array
+          items:
+            type: string
+          description: "Array of podcast IDs included in the playlist"
+        img:
+          type: string
+          description: "URL of the playlist cover image"
+    Book:
+      type: object
+      required:
+        - title
+        - author
+        - bookSchema
+        - img
+      properties:
+        title:
+          type: string
+          example: "Advanced Programming Concepts"
+        author:
+          type: string
+          example: "John Doe"
+        bookSchema:
+          type: string
+          example: "URL to book content"
+        img:
+          type: string
+          description: "URL to book cover image"
+          example: "https://example.com/image.jpg"
+    BookList:
+      type: object
+      required:
+        - title
+        - user
+      properties:
+        title:
+          type: string
+          example: "Historical Fiction Favorites"
+        user:
+          type: string
+          description: "User ID of the booklist owner"
+        desc:
+          type: string
+          example: "A collection of top historical fiction books"
+        books:
+          type: array
+          items:
+            type: string
+          description: "Array of book IDs included in the booklist"
+        img:
+          type: string
+          description: "URL of the booklist cover image"
+  
+  securitySchemes:
+    auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    adminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-auth-token
+      description: API key authentication
+    adminApiKey:
+      type: apiKey
+      in: header
+      name: x-auth-token
+      description: API key authentication for admin endpoints
